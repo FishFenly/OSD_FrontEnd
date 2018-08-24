@@ -14,3 +14,14 @@ function Get-TPMStatus {
 	    return "fail"
     }
 }
+
+function Get-DeviceType {
+    <#
+    .SYNOPSIS
+        Get the device type - Desktop or Laptop
+    #>
+    $ctype = gwmi win32_systemenclosure | select -expand ChassisTypes
+    return $ctype
+}
+
+Export-ModuleMember -Function 'Get-TPMStatus','Get-DeviceType'

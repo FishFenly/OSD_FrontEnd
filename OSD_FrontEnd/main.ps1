@@ -5,6 +5,12 @@
     AUTHOR - Joseph Fenly
 #>
 
+Import-Module ./OSD_HW
+Import-Module ./OSD_Network
+
+# Variables
+
+
 $ixaml = @"
 <Window x:Class="QuickOSD.UserInterface"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -59,22 +65,49 @@ $ixaml = @"
 </Window>
 "@
 
+# Clean UI code programatically and create the XAML object and export variables
 $ixaml = $ixaml -replace 'mc:Ignorable="d"','' -replace "x:N",'N' `
     -replace '^<Win.*', '<Window'
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 [xml]$xaml = $ixaml
 $reader = (New-Object System.Xml.XmlNodeReader $xaml)
-try{
+try {
     $form = [Windows.Markup.XamlReader]::Load($reader)
     return $form
-}
-catch{
+} catch {
     return $Error[0]
     exit
 }
 $xaml.SelectNodes("//*[@Name]") | % {
     Set-Variable -Name "WPF$($_.Name)" -Value $form.FindName($_.Name)
+}
+
+function Set-VerboseInfo ($message) {
+    <#
+    .SYNOPSIS
+        Append information to the verbose log
+    #>
+    return $WPFstatusTextBox.Appendtext($message + [char]13)
+}
+function Start-StatusChecks {
+    <#
+    .SYNOPSIS
+        Core functionality - Runs all the status check tools
+    #>
+    Set-VerboseInfo -message "INFO: Starting network checks"
+    if ((Get-EthStatus).ToString() -eq "2") {
+        Set-VerboseInfo -message "INFO: Getting IP address assigned to Ethernet adapter"
+        if (Get-EthIP -eq "fail") {
+            $LANCHECK = "fail"
+        } else {
+            Set-VerboseInfo -message "INFO: IP Address is: $((Get-EthIP).ToString())"
+            $LANCHECK = "pass"
+        }
+    } else {
+        Set-VerboseInfo -message "ERROR: No Ethernet cable connected"
+    }
+    
 }
 
 # Run UI

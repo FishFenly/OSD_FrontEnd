@@ -7,9 +7,9 @@ function Get-EthIP {
         $ip = Get-NetIPConfiguration | ? InterfaceAlias -Like "*Ethernet*" | 
             select -Expand IPv4Address | select -Expand IPaddress -First 1
 
-        return "SUCCESS: IP Address is - " + $ip
+        return $ip
     } catch {
-        return "ERROR: A problem occured while getting IP address"
+        return "fail"
     }
 }
 
